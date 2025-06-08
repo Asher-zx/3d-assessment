@@ -11,6 +11,9 @@
         <a-asset-item id="mako" src="./assets/Mako.glb"></a-asset-item>
         <a-asset-item id="totoro" src="./assets/totoro.glb"></a-asset-item>
         <img id="skyTexture" src="./assets/starsmilky.jpg" />
+
+        <audio id="totoro-audio" src="./assets/sound/totoro.mp3"></audio>
+        <audio id="character-audio" src="./assets/sound/wow.mp3"></audio>
       </a-assets>
       <a-sky 
           src="#skyTexture"
@@ -91,8 +94,25 @@
           var animationPlayed = false;
           var totoroFlying = false;
 
+          var totoroAudio = document.querySelector('#totoro-audio');
+          var characterAudio = document.querySelector('#character-audio');
+
           var initialPosition = {x: -6.278, y: 1.6, z: 17.275};
           var initialRotation = {x: -9.969, y: -10.313, z: 0};
+
+          function stopTotoroAudio() {
+            if (totoroAudio && !totoroAudio.paused) {
+              totoroAudio.pause();
+              totoroAudio.currentTime = 0;
+            }
+          }
+          function stopCharacterAudio() {
+            if (characterAudio && !characterAudio.paused) {
+              characterAudio.pause();
+              characterAudio.currentTime = 0;
+            }
+          }
+
 
           function moveCamera() {
             camera.setAttribute('position', {x: -9.271, y: -1.301, z: 5.824});
@@ -102,6 +122,7 @@
             character.removeAttribute('animation-mixer');
             backBtn.setAttribute('visible', true);
             backBtn2.setAttribute('visible', false);
+            stopTotoroAudio();
           }
           function moveCameraTotoro() {
             camera.setAttribute('position', {x: -0.625, y: 1.293, z: 2.595});
@@ -110,6 +131,7 @@
             totoroFlying = false;
             backBtn2.setAttribute('visible', true);
             backBtn.setAttribute('visible', false);
+            stopCharacterAudio();
           }
 
           function playCharacterAnimation() {
@@ -124,6 +146,10 @@
               moveCamera();
             } else {
               playCharacterAnimation();
+              if (characterAudio) {
+                characterAudio.currentTime = 0;
+                characterAudio.play();
+              }
             }
           }
 
@@ -132,6 +158,10 @@
               moveCameraTotoro();
             } else if (!totoroFlying) {
               totoroFlying = true;
+              if (totoroAudio) {
+                totoroAudio.currentTime = 0;
+                totoroAudio.play();
+              }
               totoro.setAttribute('animation__fly', {
                 property: 'position',
                 to: '-0.442 2.5 0.811',
@@ -176,6 +206,8 @@
               backBtn.setAttribute('visible', false);
               animationPlayed = false;
               character.removeAttribute('animation-mixer');
+              stopTotoroAudio();
+              stopCharacterAudio();
             });
           }
 
@@ -186,6 +218,8 @@
               camera.setAttribute('wasd-controls', 'enabled', true);
               backBtn2.setAttribute('visible', false);
               totoroFlying = false;
+              stopTotoroAudio();
+              stopCharacterAudio();
             });
           }
 
