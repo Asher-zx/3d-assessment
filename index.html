@@ -11,6 +11,8 @@
         <a-asset-item id="mako" src="./assets/Mako.glb"></a-asset-item>
         <a-asset-item id="totoro" src="./assets/totoro.glb"></a-asset-item>
         <img id="skyTexture" src="./assets/starsmilky.jpg" />
+        
+        <a-asset-item id="spaceship" src="./assets/spaceship.glb"></a-asset-item>
 
         <audio id="totoro-audio" src="./assets/sound/totoro.mp3"></audio>
         <audio id="character-audio" src="./assets/sound/wow.mp3"></audio>
@@ -20,6 +22,9 @@
           rotation="0 0 0"
           animation="property: rotation; to: 0 360 0; loop: true; dur: 60000; easing: linear">
       </a-sky>
+
+      <a-entity hand-controls="left"></a-entity>
+      <a-entity hand-controls="right"></a-entity>
 
       <a-entity 
         id="back-button"
@@ -39,6 +44,21 @@
         class="clickable"
         visible="false"
       ></a-entity>
+
+      <a-entity 
+        id="spaceship"
+        position="-3.969 -0.829 11.827" 
+        rotation="-16.026 -121.672 16.251"
+        scale="1 1 1"
+      >
+        <a-gltf-model id="spaceship" src="#spaceship"></a-gltf-model>
+        <a-box id="spaceship-hitbox"
+        position="0 0 0"
+        width="3" height="3" depth="6"
+        opacity="0" transparent="true"
+        class="clickable"></a-box>
+      </a-entity>
+
       <a-entity
         id="floatingisland"
         position="0 0 0"
@@ -97,8 +117,61 @@
           var totoroAudio = document.querySelector('#totoro-audio');
           var characterAudio = document.querySelector('#character-audio');
 
+/*           var spaceship = document.querySelector('#spaceship');
+          var spaceshipHitbox = document.querySelector('#spaceship-hitbox');
+          var driving = false;
+          var originalCameraParent = camera.parentElement;
+          var originalCameraPos = camera.getAttribute('position');
+          var originalCameraRot = camera.getAttribute('rotation');
+          var speed = 0.2;
+ */
           var initialPosition = {x: -6.278, y: -0.829, z: 15.253};
           var initialRotation = {x: 3.067, y: -8.702, z: -1.745};
+
+/*           function enterDrivingMode() {
+            if (driving) return; 
+            driving = true;
+            spaceship.appendChild(camera);
+            camera.setAttribute('position', {x:0, y:1.5, z:0});
+            camera.setAttribute('rotation', {x:0, y:0, z:0});
+            camera.setAttribute('look-controls', 'enabled', true);
+            camera.setAttribute('wasd-controls', 'enabled', false);
+          }
+
+          function exitDrivingMode() {
+            if (!driving) return;
+            driving = false;
+            originalCameraParent.appendChild(camera);
+            camera.setAttribute('position', originalCameraPos);
+            camera.setAttribute('rotation', originalCameraRot);
+            camera.setAttribute('look-controls', 'enabled', true);
+            camera.setAttribute('wasd-controls', 'enabled', true);
+          }
+
+          document.addEventListener('keydown', function(e) {
+            if (!driving) return;
+            var pos = spaceship.getAttribute('position');
+            switch(e.key.toLowerCase()) {
+              case 'w': pos.z -= speed; break;
+              case 's': pos.z += speed; break;
+              case 'a': pos.x -= speed; break;
+              case 'd': pos.x += speed; break;
+              case 'q': pos.y += speed; break;
+              case 'e': pos.y -= speed; break;
+              case 'escape': exitDrivingMode(); break;
+            }
+            spaceship.setAttribute('position', pos);
+          });
+
+          window.addEventListener('gamepadbuttondown', function (evt) {
+            if (driving && evt.detail.index === 1) {
+              exitDrivingMode();
+            }
+          });
+
+          // click to enter driving mode
+          if (spaceship) spaceship.addEventListener('click', enterDrivingMode);
+          if (spaceshipHitbox) spaceshipHitbox.addEventListener('click', enterDrivingMode); */
 
           function stopTotoroAudio() {
             if (totoroAudio && !totoroAudio.paused) {
