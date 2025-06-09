@@ -23,9 +23,6 @@
           animation="property: rotation; to: 0 360 0; loop: true; dur: 60000; easing: linear">
       </a-sky>
 
-      <a-entity hand-controls="left"></a-entity>
-      <a-entity hand-controls="right"></a-entity>
-
       <a-entity 
         id="back-button"
         geometry="primitive: plane; width: 1; height: 0.4"
@@ -45,24 +42,19 @@
         visible="false"
       ></a-entity>
 
-      <a-entity 
+      <!-- <a-entity 
         id="spaceship"
         position="-3.969 -0.829 11.827" 
         rotation="-16.026 -121.672 16.251"
         scale="1 1 1"
       >
-        <a-gltf-model id="spaceship" src="#spaceship"></a-gltf-model>
-        <a-box id="spaceship-hitbox"
-        position="0 0 0"
-        width="3" height="3" depth="6"
-        opacity="0" transparent="true"
-        class="clickable"></a-box>
-      </a-entity>
-
-      <a-entity
-        id="floatingisland"
-        position="0 0 0"
-      >
+    </a-entity> -->
+    
+    <a-entity
+    id="floatingisland"
+    position="0 0 0"
+    >
+        <a-gltf-model id="spaceship" src="#spaceship" position="-3.969 -0.829 11.827" rotation="-16.026 -121.672 16.251" scale="1 1 1"></a-gltf-model>
         <a-gltf-model src="#floatingisland" scale="0.01 0.01 0.01"></a-gltf-model>
         <a-gltf-model id="totoro-model" src="#totoro" position="-0.442 1.351 0.811" scale="0.445 0.445 0.445" rotation="0 120.941 0"></a-gltf-model>
         <a-box 
@@ -93,18 +85,109 @@
 
 
       <a-entity 
-      id="mainCamera"
-      camera 
+      id="rig"
       position="-6.278 -0.829 15.253" 
       rotation="3.067 -8.702 -1.745"
-      look-controls
-      wasd-controls
       >
+      <a-entity id="mainCamera" camera look-controls wasd-controls></a-entity>
+      <a-entity id="left-hand"  oculus-touch-controls="hand: left" thumbstick-move="rig: #rig"></a-entity>
+      <a-entity id="right-hand"  oculus-touch-controls="hand: right" thumbstick-rotate="rig: #rig"></a-entity>
       <a-cursor></a-cursor>
       </a-entity>
       <script>
+        AFRAME.registerComponent('thumbstick-move', {
+          schema: {
+            rig: {type: 'selector'},
+            speed: {type: 'number', default: 0.05}
+          },
+          init: function () {
+            this.direction = {x: 0, y: 0};
+            this.normalSpeed = this.data.speed;
+            this.boostSpeed = this.data.speed * 3;
+
+            this.el.addEventListener('thumbstickmoved', (evt) => {
+              this.direction.x = evt.detail.x;
+              this.direction.y = evt.detail.y
+            });
+            this.el.addEventListener('triggerdown', () => {
+              this.data.speed = this.boostSpeed;
+              const scene = document.querySelector('a-scene');
+              if (scene) {
+                scene.setAttribute('background', 'color: #222');
+                if (!scene.querySelector('#boost-light')) {
+                  const boostLight = document.createElement('a-entity');
+                  boostLight.setAttribute('id', 'boost-light');
+                  boostLight.setAttribute('light', 'type: point; color: #0ff; intensity: 2; distance: 10');
+                  boostLight.setAttribute('position', '0 2 0');
+                  scene.appendChild(boostLight);
+                }
+              }
+            });
+
+            this.el.addEventListener('triggerup', () => {
+              this.data.speed = this.normalSpeed;
+              const scene = document.querySelector('a-scene');
+              if (scene) {
+                scene.setAttribute('background', 'color: #000');
+                const boostLight = scene.querySelector('#boost-light');
+                if (boostLight) {
+                  scene.removeChild(boostLight);
+                }
+              }
+            });
+          },
+          tick: function () {
+            if (!this.data.rig) return;
+            if (Math.abs(this.direction.x) > 0.1 || Math.abs(this.direction.y) > 0.1) {
+              const rigObj = this.data.rig.object3D;
+
+              const forward = new THREE.Vector3();
+              rigObj.getWorldDirection(forward);
+              forward.normalize();
+
+              const strafe = new THREE.Vector3().crossVectors(rigObj.up, forward).normalize();
+
+              const moveVector = new THREE.Vector3();
+              moveVector.addScaledVector(forward, this.direction.y * this.data.speed);
+              moveVector.addScaledVector(strafe, this.direction.x * this.data.speed);
+
+              rigObj.position.add(moveVector);
+            }
+          }
+        });
+        AFRAME.registerComponent('thumbstick-rotate', {
+          schema: {
+            rig: { type: 'selector' },
+            speed: { type: 'number', default: 0.5 },
+            rollSpeed: { type: 'number', default: 0.03 }
+          },
+          init: function () {
+            this.rotationInput = {x: 0, y: 0};
+            this.roll = 0;
+            this.el.addEventListener('thumbstickmoved', (evt) => {
+              this.rotationInput.x = evt.detail.x;
+              this.rotationInput.y = evt.detail.y;
+            });
+            this.el.addEventListener('abuttondown', () => this.roll = -1);
+            this.el.addEventListener('abuttonup', () => this.roll = 0);
+            this.el.addEventListener('bbuttondown', () => this.roll = 1);
+            this.el.addEventListener('bbuttonup', () => this.roll = 0);
+          },
+          tick: function () {
+            if (!this.data.rig) return;
+              const rigObj = this.data.rig.object3D;
+              if (Math.abs(this.rotationInput.x) > 0.05) {
+                rigObj.rotation.y -= this.rotationInput.x * 0.01 * this.data.speed;
+              }
+              if (Math.abs(this.rotationInput.y) > 0.05) {
+                rigObj.rotation.x -= this.rotationInput.y * 0.01 * this.data.speed;
+                rigObj.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, rigObj.rotation.x));
+              }
+          }
+        });
+
         document.addEventListener('DOMContentLoaded', function () {
-          var camera = document.querySelector('#mainCamera');
+          var camera = document.querySelector('#rig');
           var character = document.querySelector('#character-model');
           var hitbox = document.querySelector('#character-hitbox');
           var backBtn = document.querySelector('#back-button');
@@ -125,7 +208,7 @@
           var originalCameraRot = camera.getAttribute('rotation');
           var speed = 0.2;
  */
-          var initialPosition = {x: -6.278, y: -0.829, z: 15.253};
+          var initialPosition = {x: -6.278, y: -2.439, z: 14.493};
           var initialRotation = {x: 3.067, y: -8.702, z: -1.745};
 
 /*           function enterDrivingMode() {
@@ -188,9 +271,9 @@
 
 
           function moveCamera() {
-            camera.setAttribute('position', {x: -9.271, y: -1.301, z: 5.824});
-            camera.setAttribute('rotation', {x: -9.626, y: -12.605, z: 0});
-            camera.setAttribute('wasd-controls', 'enabled', false);
+            rig.setAttribute('position', {x: -9.271, y: -2.772, z: 7.412});
+            rig.setAttribute('rotation', {x: -1.405, y: -4.145, z: 4.714});
+            // rig.setAttribute('wasd-controls', 'enabled', false);
             animationPlayed = false;
             character.removeAttribute('animation-mixer');
             backBtn.setAttribute('visible', true);
@@ -198,9 +281,9 @@
             stopTotoroAudio();
           }
           function moveCameraTotoro() {
-            camera.setAttribute('position', {x: -0.625, y: 1.293, z: 2.595});
-            camera.setAttribute('rotation', {x: -0.888, y: -11.098, z: -2.198});
-            camera.setAttribute('wasd-controls', 'enabled', false);
+            rig.setAttribute('position', {x: -0.971, y: -0.040, z: 2.895});
+            rig.setAttribute('rotation', {x: -0.888, y: -11.098, z: -2.198});
+            // rig.setAttribute('wasd-controls', 'enabled', false);
             totoroFlying = false;
             backBtn2.setAttribute('visible', true);
             backBtn.setAttribute('visible', false);
@@ -215,7 +298,7 @@
           }
           
           function handleCharacterClick() {
-            if (Math.abs(camera.getAttribute('position').x - (-9.271)) > 0.01) {
+            if (Math.abs(rig.getAttribute('position').x - (-9.271)) > 0.01) {
               moveCamera();
             } else {
               playCharacterAnimation();
@@ -227,7 +310,7 @@
           }
 
           function handleTotoroClick() {
-            if (Math.abs(camera.getAttribute('position').x - (-0.625)) > 0.01) {
+            if (Math.abs(rig.getAttribute('position').x - (-0.625)) > 0.01) {
               moveCameraTotoro();
             } else if (!totoroFlying) {
               totoroFlying = true;
@@ -273,9 +356,9 @@
 
           if (backBtn) {
             backBtn.addEventListener('click', function () {
-              camera.setAttribute('position', initialPosition);
-              camera.setAttribute('rotation', initialRotation);
-              camera.setAttribute('wasd-controls', 'enabled', true);
+              rig.setAttribute('position', initialPosition);
+              rig.setAttribute('rotation', initialRotation);
+              // rig.setAttribute('wasd-controls', 'enabled', true);
               backBtn.setAttribute('visible', false);
               animationPlayed = false;
               character.removeAttribute('animation-mixer');
@@ -286,9 +369,9 @@
 
           if (backBtn2) {
             backBtn2.addEventListener('click', function () {
-              camera.setAttribute('position', initialPosition);
-              camera.setAttribute('rotation', initialRotation);
-              camera.setAttribute('wasd-controls', 'enabled', true);
+              rig.setAttribute('position', initialPosition);
+              rig.setAttribute('rotation', initialRotation);
+              // rig.setAttribute('wasd-controls', 'enabled', true);
               backBtn2.setAttribute('visible', false);
               totoroFlying = false;
               stopTotoroAudio();
