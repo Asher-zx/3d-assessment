@@ -90,8 +90,18 @@
       rotation="3.067 -8.702 -1.745"
       >
       <a-entity id="mainCamera" camera look-controls wasd-controls></a-entity>
-      <a-entity id="left-hand"  oculus-touch-controls="hand: left" thumbstick-move="rig: #rig"></a-entity>
-      <a-entity id="right-hand"  oculus-touch-controls="hand: right" thumbstick-rotate="rig: #rig"></a-entity>
+      <a-entity 
+      id="left-hand"  
+      oculus-touch-controls="hand: left" 
+      thumbstick-move="rig: #rig"
+      raycaster="objects: .clickable"
+      line="color: #0ff; opacity: 0.5"></a-entity>
+      <a-entity 
+      id="right-hand"  
+      oculus-touch-controls="hand: right" 
+      thumbstick-rotate="rig: #rig"
+      raycaster="objects: .clickable"
+      line="color: #0ff; opacity: 0.5"></a-entity>
       <a-cursor></a-cursor>
       </a-entity>
       <script>
@@ -108,32 +118,6 @@
             this.el.addEventListener('thumbstickmoved', (evt) => {
               this.direction.x = evt.detail.x;
               this.direction.y = evt.detail.y
-            });
-            this.el.addEventListener('triggerdown', () => {
-              this.data.speed = this.boostSpeed;
-              const scene = document.querySelector('a-scene');
-              if (scene) {
-                scene.setAttribute('background', 'color: #222');
-                if (!scene.querySelector('#boost-light')) {
-                  const boostLight = document.createElement('a-entity');
-                  boostLight.setAttribute('id', 'boost-light');
-                  boostLight.setAttribute('light', 'type: point; color: #0ff; intensity: 2; distance: 10');
-                  boostLight.setAttribute('position', '0 2 0');
-                  scene.appendChild(boostLight);
-                }
-              }
-            });
-
-            this.el.addEventListener('triggerup', () => {
-              this.data.speed = this.normalSpeed;
-              const scene = document.querySelector('a-scene');
-              if (scene) {
-                scene.setAttribute('background', 'color: #000');
-                const boostLight = scene.querySelector('#boost-light');
-                if (boostLight) {
-                  scene.removeChild(boostLight);
-                }
-              }
             });
           },
           tick: function () {
@@ -186,6 +170,25 @@
           }
         });
 
+        function setupHandRaycastClick(hand) {
+          hand.addEventListener('triggerdown', function () {
+            var intersections = hand.components.raycaster.intersections;
+            if (!intersections || intersections.length === 0) return;
+            var target = intersections[0].object.el;
+            if (!target) return;
+            // 判断是否是 totoro 或 totoro-hitbox
+            if (target.id === 'totoro-model' || target.id === 'totoro-hitbox') {
+              handleTotoroClick();
+            }
+            // 判断是否是 character 或 character-hitbox
+            if (target.id === 'character-model' || target.id === 'character-hitbox') {
+              handleCharacterClick();
+            }
+          });
+        }
+        setupHandRaycastClick(document.getElementById('left-hand'));
+        setupHandRaycastClick(document.getElementById('right-hand'));
+
         document.addEventListener('DOMContentLoaded', function () {
           var camera = document.querySelector('#rig');
           var character = document.querySelector('#character-model');
@@ -208,7 +211,7 @@
           var originalCameraRot = camera.getAttribute('rotation');
           var speed = 0.2;
  */
-          var initialPosition = {x: -6.278, y: -2.439, z: 14.493};
+          var initialPosition = {x: -6.278, y: -0.220, z: -0.372};
           var initialRotation = {x: 3.067, y: -8.702, z: -1.745};
 
 /*           function enterDrivingMode() {
@@ -281,7 +284,7 @@
             stopTotoroAudio();
           }
           function moveCameraTotoro() {
-            rig.setAttribute('position', {x: -0.971, y: -0.040, z: 2.895});
+            rig.setAttribute('position', {x: 8.886, y: 1.377, z: -10.161});
             rig.setAttribute('rotation', {x: -0.888, y: -11.098, z: -2.198});
             // rig.setAttribute('wasd-controls', 'enabled', false);
             totoroFlying = false;
@@ -318,28 +321,10 @@
                 totoroAudio.currentTime = 0;
                 totoroAudio.play();
               }
-              totoro.setAttribute('animation__fly', {
-                property: 'position',
-                to: '-0.442 2.5 0.811',
-                dur: 600,
-                easing: 'easeOutQuad',
-                loop: false
-              });
-              totoro.setAttribute('animation__spin', {
-                property: 'rotation',
-                to: '0 480.941 0',
-                dur: 1200,
-                easing: 'linear',
-                loop: false
-              });
+              totoro.setAttribute('animation__fly', 'property: position; to: -0.442 2.5 0.811; dur: 600; easing: easeOutQuad; loop: false');
+              totoro.setAttribute('animation__spin', 'property: rotation; to: 0 480.941 0; dur: 1200; easing: linear; loop: false');
               setTimeout(function () {
-                totoro.setAttribute('animation__flydown', {
-                  property: 'position',
-                  to: '-0.442 1.351 0.811',
-                  dur: 600,
-                  easing: 'easeInQuad',
-                  loop: false
-                });
+                totoro.setAttribute('animation__flydown', 'property: position; to: -0.442 1.351 0.811; dur: 600; easing: easeInQuad; loop: false');
               }, 600);
               setTimeout(function () {
                 totoro.setAttribute('rotation', '0 120.941 0');
