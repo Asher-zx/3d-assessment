@@ -56,7 +56,7 @@
     >
         <a-gltf-model id="spaceship" src="#spaceship" position="-3.969 -0.829 11.827" rotation="-16.026 -121.672 16.251" scale="1 1 1"></a-gltf-model>
         <a-gltf-model src="#floatingisland" scale="0.01 0.01 0.01"></a-gltf-model>
-        <a-gltf-model id="totoro-model" src="#totoro" position="-0.442 1.351 0.811" scale="0.445 0.445 0.445" rotation="0 120.941 0"></a-gltf-model>
+        <a-gltf-model id="totoro-model" src="#totoro" position="-0.442 1.351 0.811" scale="0.445 0.445 0.445" rotation="0 120.941 0" class="clickable"></a-gltf-model>
         <a-box 
         id="totoro-hitbox"
         position="-0.494 1.211 0.759"
@@ -89,19 +89,27 @@
       position="-6.278 -0.829 15.253" 
       rotation="3.067 -8.702 -1.745"
       >
-      <a-entity id="mainCamera" camera look-controls wasd-controls></a-entity>
+      <a-entity 
+        id="mainCamera" 
+        camera="active: true"
+        look-controls="pointerLockEnabled: true; reverseMouseDrag: true"
+        wasd-controls="acceleration: 200; fly: true"
+        position="0 0 0"
+      ></a-entity>
       <a-entity 
       id="left-hand"  
+      laser-controls
       oculus-touch-controls="hand: left" 
       thumbstick-move="rig: #rig"
-      raycaster="objects: .clickable"
-      line="color: #0ff; opacity: 0.5"></a-entity>
+      raycaster="objects: .clickable; far: 10" 
+      line="color: #0ff; opacity: 0.75"></a-entity>
       <a-entity 
       id="right-hand"  
       oculus-touch-controls="hand: right" 
+      laser-controls
       thumbstick-rotate="rig: #rig"
-      raycaster="objects: .clickable"
-      line="color: #0ff; opacity: 0.5"></a-entity>
+      raycaster="objects: .clickable; far: 10"
+      line="color: #0ff; opacity: 0.75"></a-entity>
       <a-cursor></a-cursor>
       </a-entity>
       <script>
@@ -176,11 +184,11 @@
             if (!intersections || intersections.length === 0) return;
             var target = intersections[0].object.el;
             if (!target) return;
-            // 判断是否是 totoro 或 totoro-hitbox
+
             if (target.id === 'totoro-model' || target.id === 'totoro-hitbox') {
               handleTotoroClick();
             }
-            // 判断是否是 character 或 character-hitbox
+
             if (target.id === 'character-model' || target.id === 'character-hitbox') {
               handleCharacterClick();
             }
@@ -211,7 +219,7 @@
           var originalCameraRot = camera.getAttribute('rotation');
           var speed = 0.2;
  */
-          var initialPosition = {x: -6.278, y: -0.220, z: -0.372};
+          var initialPosition = {x: -6.278, y: -2.152, z: 13.700};
           var initialRotation = {x: 3.067, y: -8.702, z: -1.745};
 
 /*           function enterDrivingMode() {
@@ -276,16 +284,20 @@
           function moveCamera() {
             rig.setAttribute('position', {x: -9.271, y: -2.772, z: 7.412});
             rig.setAttribute('rotation', {x: -1.405, y: -4.145, z: 4.714});
+
+
             // rig.setAttribute('wasd-controls', 'enabled', false);
             animationPlayed = false;
             character.removeAttribute('animation-mixer');
             backBtn.setAttribute('visible', true);
             backBtn2.setAttribute('visible', false);
             stopTotoroAudio();
-          }
+          } 
+
           function moveCameraTotoro() {
-            rig.setAttribute('position', {x: 8.886, y: 1.377, z: -10.161});
+            rig.setAttribute('position', {x: -1.412, y: -0.035, z: 4.256});
             rig.setAttribute('rotation', {x: -0.888, y: -11.098, z: -2.198});
+
             // rig.setAttribute('wasd-controls', 'enabled', false);
             totoroFlying = false;
             backBtn2.setAttribute('visible', true);
@@ -313,7 +325,7 @@
           }
 
           function handleTotoroClick() {
-            if (Math.abs(rig.getAttribute('position').x - 8.886) > 0.01) {
+            if (Math.abs(rig.getAttribute('position').x - (-1.412)) > 0.01) {
               moveCameraTotoro();
             } else if (!totoroFlying) {
               totoroFlying = true;
@@ -364,7 +376,7 @@
             });
           }
 
-          character.removeAttribute('animation-mixer');
+          character.removeAttribute('animation-mixer'); 
         });
       </script>
     </a-scene>
